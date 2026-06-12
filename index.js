@@ -22,18 +22,30 @@ client.on("messageCreate", async (message) => {
   if (whitelist.includes(message.author.id)) return;
   //   if(message.author.id === '536876453770297354') return;
   console.log(
-    "This user trying to send msg:  ",
+    new Date().toISOString(),
+    " New msg:  ",
     message.author.id,
     message.author.username,
+    message.content,
   );
 
   if (message.channel.id === TRAP_CHANNEL_ID) {
+    // try {
+    //   await message.delete();
+    //   console.log("Channel:", message.channel.name, "ID:", message.channel.id);
+    //   console.log(`Deleted message from ${message.author.tag}`);
+    // } catch (error) {
+    //   console.error(error);
+    // }
     try {
-      await message.delete();
-      console.log("Channel:", message.channel.name, "ID:", message.channel.id);
-      console.log(`Deleted message from ${message.author.tag}`);
+      await message.guild.members.ban(message.author.id, {
+        reason: "Trap channel triggered",
+        deleteMessageSeconds: 60 * 60, // hapus pesan 1 jam terakhir
+      });
+
+      console.log(`Banned ${message.author.tag}`);
     } catch (error) {
-      console.error(error);
+      console.error(`Failed to ban ${message.author.tag}:`, error);
     }
   }
 });
