@@ -10,8 +10,8 @@ const client = new Client({
   ],
 });
 
-const TRAP_CHANNEL_ID = "1509974326412054568";
-const whitelist = ["536876453770297354"];
+const TRAP_CHANNEL_ID = process.env.TRAP_CHANNEL_ID;
+const whitelist = [process.env.ME_ADMIN_ID];
 
 client.once("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
@@ -22,7 +22,7 @@ client.on("messageCreate", async (message) => {
   if (whitelist.includes(message.author.id)) return;
   //   if(message.author.id === '536876453770297354') return;
   console.log(
-    "auth id : ",
+    "This user trying to send msg:  ",
     message.author.id,
     message.author.username,
   );
