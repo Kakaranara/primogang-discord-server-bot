@@ -16,7 +16,7 @@ const everyoneTracker = new Map();
 const TRAP_CHANNEL_ID = process.env.TRAP_CHANNEL_ID;
 const whitelist = [process.env.ME_ADMIN_ID];
 
-client.once("ready", () => {
+client.once("clientReady", () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
 
@@ -41,7 +41,7 @@ client.on("messageCreate", async (message) => {
     if (shouldBan) {
       console.log(`${message.author.username} exceeded @everyone limit`);
 
-      await Actions.deleteChat(message);
+      await Actions.BAN(message);
     }
   }
 });
