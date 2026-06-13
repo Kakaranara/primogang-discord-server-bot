@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const { Client, GatewayIntentBits } = require("discord.js");
+const { Actions } = require("./utils/helper");
 
 const client = new Client({
   intents: [
@@ -9,6 +10,8 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
   ],
 });
+
+const everyoneTracker = new Map();
 
 const TRAP_CHANNEL_ID = process.env.TRAP_CHANNEL_ID;
 const whitelist = [process.env.ME_ADMIN_ID];
@@ -20,34 +23,58 @@ client.once("ready", () => {
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
   if (whitelist.includes(message.author.id)) return;
-  //   if(message.author.id === '536876453770297354') return;
+
   console.log(
-    new Date().toISOString(),
-    " New msg:  ",
+    "New msg:  ",
     message.author.id,
     message.author.username,
     message.content,
   );
 
   if (message.channel.id === TRAP_CHANNEL_ID) {
-    // try {
-    //   await message.delete();
-    //   console.log("Channel:", message.channel.name, "ID:", message.channel.id);
-    //   console.log(`Deleted message from ${message.author.tag}`);
-    // } catch (error) {
-    //   console.error(error);
-    // }
-    try {
-      await message.guild.members.ban(message.author.id, {
-        reason: "Trap channel triggered",
-        deleteMessageSeconds: 60 * 60, // hapus pesan 1 jam terakhir
-      });
+    Actions.BAN(message);
+  }
+  // Deteksi @everyone
+  if (message.mentions.everyone) {
+    const shouldBan = handleEveryonePing(message);
 
-      console.log(`Banned ${message.author.tag}`);
-    } catch (error) {
-      console.error(`Failed to ban ${message.author.tag}:`, error);
+    if (shouldBan) {
+      console.log(`${message.author.username} exceeded @everyone limit`);
+
+      await Actions.deleteChat(message);
     }
   }
 });
 
 client.login(process.env.DISCORD_TOKEN);
+
+function handleEveryonePing(message) {
+  const userId = message.author.id;
+  const today = new Date().toISOString().split("T")[0]; // 2026-06-13
+
+  const current = everyoneTracker.get(userId);
+
+  // User belum ada atau sudah ganti hari
+  if (!current || current.date !== today) {
+    everyoneTracker.set(userId, {
+      date: today,
+      count: 1,
+    });
+
+    console.log(`${message.author.username} pinged @everyone (1/3)`);
+    return false;
+  }
+
+  current.count++;
+
+  console.log(
+    `${message.author.username} pinged @everyone (${current.count}/3)`,
+  );
+
+  if (current.count >= 3) {
+    everyoneTracker.delete(userId);
+    return true;
+  }
+
+  return false;
+}
